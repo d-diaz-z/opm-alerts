@@ -4,6 +4,10 @@ on:
     - cron: '*/5 * * * *'
   workflow_dispatch:
 
+env:
+  # Explicitly force GitHub to use the Node 24 runtime for all actions
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   check-status:
     runs-on: ubuntu-latest
@@ -11,12 +15,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4 # v4 is still fine, but check for v5 soon
+        uses: actions/checkout@v4 # Note: v4 is updated to support node24 internally
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Updated to v5 to resolve Node 20 warning
+        uses: actions/setup-python@v5 # v5 includes Node 24 compatibility fixes
         with:
-          python-version: '3.11'   # Specifying a version helps stability
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: pip install requests
