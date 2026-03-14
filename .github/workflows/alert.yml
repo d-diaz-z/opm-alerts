@@ -1,0 +1,34 @@
+name: OPM Status Watchdog
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Maximum frequency: Every 5 minutes
+  workflow_dispatch:      # Allows manual trigger for testing
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # Required to push log and timestamp updates
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Run Monitoring Script
+        run: python check_status.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Add the state file and all current/backup log files
+          git add last_alert.txt activity*.log
+          git commit -m "Automated OPM Check [Skip CI]" || exit 0
+          git push
