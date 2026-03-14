@@ -8,32 +8,33 @@ DEBUG = True
 ENDPOINT = "https://www.opm.gov/json/operatingstatus.json"
 LAST_ALERT_FILE = "last_alert.txt"
 LOG_FILE = "activity.log"
+LOG_DIR = "logs"
 
 def log_message(message):
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Rotation Logic: Check if existing log is from a previous day
+    # 1. Ensure the logs directory exists
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+
+    # 2. Rotation Logic
     if os.path.exists(LOG_FILE):
-        # Get the last modification time of the file
         file_mod_time = datetime.fromtimestamp(os.path.getmtime(LOG_FILE))
         file_date_str = file_mod_time.strftime("%Y-%m-%d")
 
-        # If the file's date is not today, rename it to a backup
         if file_date_str != today_str:
-            backup_name = f"activity_{file_date_str}.log"
-            os.rename(LOG_FILE, backup_name)
-            # Optional: Start the new log with a rotation notice
+            # Move to the /logs/ folder instead of root
+            backup_path = os.path.join(LOG_DIR, f"activity_{file_date_str}.log")
+            os.rename(LOG_FILE, backup_path)
+            
             with open(LOG_FILE, "a") as f:
-                f.write(f"[{timestamp}] Log rotated from {backup_name}\n")
+                f.write(f"[{timestamp}] Log rotated to {backup_path}\n")
 
-    # Write the actual message to the current activity.log
+    # 3. Write to the current activity.log at root
     with open(LOG_FILE, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
-
-# Use it in your check_opm() function as before:
-# log_message(f"Checking Status: {current_status}")
 
 def check_opm():
     try:
