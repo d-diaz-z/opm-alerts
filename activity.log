@@ -13,3 +13,6 @@
 [2026-03-14 23:39:10] No new update since last alert. Skipping.
 [2026-03-14 23:59:12] Checking Status: Open (Posted: /Date(1773463238227)/)
 [2026-03-14 23:59:12] No new update since last alert. Skipping.
+[2026-03-15 03:26:50] Checking Status: Open (Posted: /Date(1773551200040)/)
+[2026-03-15 03:26:50] DEBUG MODE: Triggering alert because status is OPEN.
+[2026-03-15 03:26:50] >>> ALERT SIGNAL SENT <<<
