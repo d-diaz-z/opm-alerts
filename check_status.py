@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import base64
+import re
 from datetime import datetime
 from email.message import EmailMessage
 from google.oauth2.credentials import Credentials
@@ -46,18 +47,63 @@ def log_message(message):
     with open(LOG_FILE, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
 
-def send_sms_alert(message):
+def format_applies_to(applies_to_str):
     try:
-        token_info = json.loads(os.environ.get("GMAIL_TOKEN"))
+        dt = datetime.strptime(applies_to_str, "%B %d, %Y")
+        return dt.strftime("%m/%d/%y")
+    except ValueError:
+        return applies_to_str[:15] + "..." if len(applies_to_str) > 15 else applies_to_str
+
+def build_sms(latest_record):
+    current_status = latest_record.get('StatusSummary', 'Unknown')
+    short_msg = latest_record.get('ShortStatusMessage', '').strip()
+    long_msg = latest_record.get('LongStatusMessage', '').strip()
+    applies_to = format_applies_to(latest_record.get('AppliesTo', 'N/A'))
+    url = latest_record.get('Url', latest_record.get('StatusWebPage', ''))
+
+    # Clean HTML entities and collapse whitespace
+    short_msg = re.sub(r'&[a-z]+;', '', short_msg).strip()
+    long_msg = re.sub(r'&[a-z]+;', '', long_msg).strip()
+    long_msg = ' '.join(long_msg.split())
+
+    # If short and summary are the same, use long message for more detail
+    if short_msg == current_status:
+        detail = long_msg
+    else:
+        detail = short_msg
+
+    # Build body with guaranteed URL at end
+    url_line = f"\n{url}"
+    date_line = f"{applies_to}\n"
+    overhead = len(date_line) + len(url_line)
+    max_detail = 160 - overhead - 3  # 3 for ellipsis
+
+    if len(detail) > max_detail:
+        detail = detail[:max_detail] + "..."
+
+    sms_subject = current_status
+    sms_body = f"{date_line}{detail}{url_line}"
+
+    return sms_subject, sms_body
+
+def send_sms_alert(subject, message):
+    try:
+        token_info = os.environ.get("GMAIL_TOKEN")
         recipient = os.environ.get("SMS_RECIPIENT")
 
-        creds = Credentials.from_authorized_user_info(token_info, SCOPES)
+        if not token_info or not recipient:
+            log_message("ERROR: GMAIL_TOKEN or SMS_RECIPIENT secret not set.")
+            return
+
+        creds = Credentials.from_authorized_user_info(
+            json.loads(token_info), SCOPES
+        )
         service = build('gmail', 'v1', credentials=creds)
 
         msg = EmailMessage()
         msg.set_content(message)
         msg['To'] = recipient
-        msg['Subject'] = 'OPM Status Alert'
+        msg['Subject'] = subject
 
         raw_msg = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         result = service.users().messages().send(
@@ -74,7 +120,7 @@ def check_opm():
     try:
         response = requests.get(ENDPOINT, timeout=10)
         latest_record = response.json()
-        
+
         current_status = latest_record.get('StatusSummary', 'Unknown')
         current_timestamp = latest_record.get('DateStatusPosted')
 
@@ -103,8 +149,9 @@ def check_opm():
                 log_message(f"CRITICAL: Non-Open status detected: {current_status}")
 
         if should_alert:
-            send_sms_alert(f"OPM Status: {current_status}")
-            
+            sms_subject, sms_body = build_sms(latest_record)
+            send_sms_alert(sms_subject, sms_body)
+
             with open(LAST_ALERT_FILE, 'w') as f:
                 f.write(current_timestamp)
         else:
