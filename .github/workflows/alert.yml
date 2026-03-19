@@ -7,6 +7,8 @@ on:
 env:
   # Explicitly force GitHub to use the Node 24 runtime for all actions
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
+  SMS_RECIPIENT: ${{ secrets.SMS_RECIPIENT }}
 
 jobs:
   check-status:
