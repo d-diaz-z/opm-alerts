@@ -16,11 +16,14 @@ def log_message(message):
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
     # 1. Ensure the logs directory exists
+    print("Does logs dir exist?")
     if not os.path.exists(LOG_DIR):
+        print("NO")
         os.makedirs(LOG_DIR)
 
     # 2. Rotation Logic
     if os.path.exists(LOG_FILE):
+        print("YES")
         file_mod_time = datetime.fromtimestamp(os.path.getmtime(LOG_FILE))
         file_date_str = file_mod_time.strftime("%Y-%m-%d")
 
