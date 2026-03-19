@@ -15,27 +15,34 @@ def log_message(message):
     today_str = now.strftime("%Y-%m-%d")
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    # 1. Ensure the logs directory exists
-    print("Does logs dir exist?")
     if not os.path.exists(LOG_DIR):
-        print("NO")
         os.makedirs(LOG_DIR)
 
-    # 2. Rotation Logic
+    # Read the date from the first line of the existing log
     if os.path.exists(LOG_FILE):
-        print("YES")
-        file_mod_time = datetime.fromtimestamp(os.path.getmtime(LOG_FILE))
-        file_date_str = file_mod_time.strftime("%Y-%m-%d")
+        with open(LOG_FILE, "r") as f:
+            first_line = f.readline()
+
+        # Expect first line format: #DATE:2025-01-15
+        if first_line.startswith("#DATE:"):
+            file_date_str = first_line.strip().split(":")[1]
+        else:
+            file_date_str = today_str  # fallback, won't rotate
 
         if file_date_str != today_str:
-            # Move to the /logs/ folder instead of root
             backup_path = os.path.join(LOG_DIR, f"activity_{file_date_str}.log")
             os.rename(LOG_FILE, backup_path)
-            
-            with open(LOG_FILE, "a") as f:
-                f.write(f"[{timestamp}] Log rotated to {backup_path}\n")
+            # Start a fresh log with today's date header
+            with open(LOG_FILE, "w") as f:
+                f.write(f"#DATE:{today_str}\n")
+                f.write(f"[{timestamp}] Log rotated from {backup_path}\n")
 
-    # 3. Write to the current activity.log at root
+    # If no log exists yet, create it with a date header
+    if not os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "w") as f:
+            f.write(f"#DATE:{today_str}\n")
+
+    # Write the actual message
     with open(LOG_FILE, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
 
