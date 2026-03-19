@@ -3,6 +3,7 @@ import json
 import os
 import base64
 import re
+import urllib.parse
 from datetime import datetime
 from email.message import EmailMessage
 from google.oauth2.credentials import Credentials
@@ -47,6 +48,19 @@ def log_message(message):
     with open(LOG_FILE, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
 
+def shorten_url(url):
+    try:
+        api_url = f"http://tinyurl.com/api-create.php?url={urllib.parse.quote(url)}"
+        response = requests.get(api_url, timeout=5)
+        if response.status_code == 200:
+            return response.text.strip()
+        else:
+            log_message(f"WARNING: TinyURL returned status {response.status_code}, using original URL.")
+            return url
+    except Exception as e:
+        log_message(f"WARNING: URL shortening failed: {str(e)}, using original URL.")
+        return url
+        
 def format_applies_to(applies_to_str):
     try:
         dt = datetime.strptime(applies_to_str, "%B %d, %Y")
@@ -59,7 +73,7 @@ def build_sms(latest_record):
     short_msg = latest_record.get('ShortStatusMessage', '').strip()
     long_msg = latest_record.get('LongStatusMessage', '').strip()
     applies_to = format_applies_to(latest_record.get('AppliesTo', 'N/A'))
-    url = latest_record.get('Url', latest_record.get('StatusWebPage', ''))
+    url = shorten_url(latest_record.get('Url', latest_record.get('StatusWebPage', '')))
 
     # Clean HTML entities and collapse whitespace
     short_msg = re.sub(r'&[a-z]+;', '', short_msg).strip()
