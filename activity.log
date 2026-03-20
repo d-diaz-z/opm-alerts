@@ -2,3 +2,6 @@
 [2026-03-20 01:59:54] Log rotated from logs/activity_2026-03-19.log
 [2026-03-20 01:59:54] Checking Status: Open (Posted: /Date(1773895116607)/)
 [2026-03-20 01:59:54] No new update since last alert. Skipping.
+[2026-03-20 04:16:53] Checking Status: Open (Posted: /Date(1773993871493)/)
+[2026-03-20 04:16:53] DEBUG MODE: Triggering alert because status is OPEN.
+[2026-03-20 04:16:54] >>> ALERT SENT via Gmail. Message ID: 19d0975e3849330e <<<
