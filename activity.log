@@ -49,3 +49,6 @@
 [2026-03-20 22:27:11] No new update since last alert. Skipping.
 [2026-03-20 23:00:57] Checking Status: Open (Posted: /Date(1773993871493)/)
 [2026-03-20 23:00:57] No new update since last alert. Skipping.
+[2026-03-20 23:57:15] Checking Status: Open (Posted: /Date(1773993995113)/)
+[2026-03-20 23:57:15] DEBUG MODE: Triggering alert because status is OPEN.
+[2026-03-20 23:57:16] >>> ALERT SENT via Gmail. Message ID: 19d0dae8b917494b <<<
