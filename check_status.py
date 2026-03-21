@@ -10,7 +10,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 # SETTINGS
-DEBUG = True  
+DEBUG = False 
 ENDPOINT = "https://www.opm.gov/json/operatingstatus.json"
 LAST_ALERT_FILE = "last_alert.txt"
 LOG_FILE = "activity.log"
